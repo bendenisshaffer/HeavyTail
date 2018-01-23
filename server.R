@@ -22,16 +22,66 @@ library(ggvis)
 library(rmutil)
 library(fExtremes)
 library(networkD3)
+library(plotly)
+library(xts)
+library(quantmod)
+library(dygraphs)
+
+get_returns = function(price_vec){
+        ret_vec = diff(price_vec) / lag(price_vec)
+        names(ret_vec) = paste(names(price_vec),"Returns")
+        return(ret_vec)
+}
 
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output){
+        
+        ########################################################################################
+        ###################### Page 1: Relationships ###########################################
+        ########################################################################################
+        
         output$distRel = renderSimpleNetwork({
                 src = c("Normal", "Normal", "Exponential", "t-distribution", "t-distribution")
                 dest = c("t-distribution", "Gamma", "Gamma", "Laplace", "Gamma")
                 distRel = data.frame(src, dest)
                 simpleNetwork(distRel)
         })
+        
+        ########################################################################################
+        ###################### Page 3: Stocks ##################################################
+        ########################################################################################
+        
+        
+        stock_df = reactive({
+                
+                apple_stock_price = getSymbols("AAPL", auto.assign = FALSE)
+                price_vec = apple_stock_price[,6]
+                df = cbind(price_vec, get_returns(price_vec))
+                df
+                
+        })
+        
+        output$dygraph = renderDygraph({
+                
+                dygraph(stock_df()) %>% dySeries("AAPL.Adjusted", axis = "y2") %>% 
+                        dyRangeSelector() %>% 
+                        dyHighlight(highlightCircleSize = 5, 
+                                    highlightSeriesBackgroundAlpha = 0.2,
+                                    hideOnMouseOut = FALSE)
+        })
+        
+        output$retrun_density = renderPlotly({
+                ret_density = density(stock_df()[-1,2], kernel = "gaussian")
+                plot_ly(x = ret_density, y = ret_density$y, type = 'scatter', mode = 'lines')
+        })
+        
+        
+        
+        ########################################################################################
+        ###################### Page 4: Distributions ###########################################
+        ########################################################################################
+        
         
         dists = reactive({
                 
@@ -85,7 +135,9 @@ shinyServer(function(input, output){
         ###### GAUSSIAN ######
         
         output$ggvis_gaussian_cdf = renderPlotly({
-                plot_ly(dists(), x = ~gaussian_pts, y = ~gaussian_cdf, type = 'scatter', mode = 'lines', name = "Gaussian")
+                p1 = plot_ly(dists(), x = ~gaussian_pts, y = ~gaussian_cdf, type = 'scatter', mode = 'lines', name = "CDF")
+                p2 = plot_ly(dists(), x = ~gaussian_pts, y = ~gaussian_pdf, type = 'scatter', mode = 'lines', name = "PDF")
+                subplot(p1, p2, nrows = 1)
         })
         
         
@@ -132,50 +184,55 @@ shinyServer(function(input, output){
         })
         
         ###### Exponential ######
-        dists %>% ggvis(~exp_pts, ~exp_cdf) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_exp_cdf")
-
-        dists %>% ggvis(~exp_pts, ~exp_pdf) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_exp_pdf")
-
-        dists %>% ggvis(~exp_cdf, ~exp_pts) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_exp_qf")
+        
+        output$ggvis_exp_cdf = renderPlotly({
+                plot_ly(dists(), x = ~exp_pts, y = ~exp_cdf, type = 'scatter', mode = 'lines', name = "Exponential")  %>%
+                        add_lines(y = ~gaussian_cdf, color = I("red"), name = "Normal")
+        })
+        
+        output$ggvis_exp_pdf = renderPlotly({
+                plot_ly(dists(), x = ~exp_pts, y = ~exp_pdf, type = 'scatter', mode = 'lines', name = "Exponential")  %>%
+                        add_lines(y = ~gaussian_pdf, color = I("red"), name = "Normal")
+        })
+        
+        output$ggvis_exp_qf = renderPlotly({
+                plot_ly(dists(), y = ~exp_pts, x = ~exp_cdf, type = 'scatter', mode = 'lines', name = "Exponential")  %>%
+                        add_lines(x = ~gaussian_cdf, color = I("red"), name = "Normal")
+        })
         
         ###### CAUCHY ######
-        dists %>% ggvis(~cauchy_pts, ~cauchy_cdf) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_cauchy_cdf")
         
-        dists %>% ggvis(~cauchy_pts, ~cauchy_pdf) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_cauchy_pdf")
+        output$ggvis_cauchy_cdf = renderPlotly({
+                plot_ly(dists(), x = ~cauchy_pts, y = ~cauchy_cdf, type = 'scatter', mode = 'lines', name = "Cauchy")  %>%
+                        add_lines(y = ~gaussian_cdf, color = I("red"), name = "Normal")
+        })
         
-        dists %>% ggvis(~cauchy_cdf, ~cauchy_pts) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_cauchy_qf")
+        output$ggvis_cauchy_pdf = renderPlotly({
+                plot_ly(dists(), x = ~cauchy_pts, y = ~cauchy_pdf, type = 'scatter', mode = 'lines', name = "Cauchy")  %>%
+                        add_lines(y = ~gaussian_pdf, color = I("red"), name = "Normal")
+        })
+        
+        output$ggvis_cauchy_qf = renderPlotly({
+                plot_ly(dists(), y = ~cauchy_pts, x = ~cauchy_cdf, type = 'scatter', mode = 'lines', name = "Cauchy")  %>%
+                        add_lines(x = ~gaussian_cdf, color = I("red"), name = "Normal")
+        })
+        
         
         ###### PARETO ######
-        dists %>% ggvis(~pareto_pts, ~pareto_cdf) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_pareto_cdf")
         
-        dists %>% ggvis(~pareto_pts, ~pareto_pdf) %>%
-                layer_lines(stroke := "blue",
-                            strokeWidth := 3,
-                            strokeDash := 4) %>% bind_shiny("ggvis_pareto_pdf")
+        output$ggvis_pareto_cdf = renderPlotly({
+                plot_ly(dists(), x = ~pareto_pts, y = ~pareto_cdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
+                        add_lines(y = ~gaussian_cdf, color = I("red"), name = "Normal")
+        })
+        
+        output$ggvis_pareto_pdf = renderPlotly({
+                plot_ly(dists(), x = ~pareto_pts, y = ~pareto_pdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
+                        add_lines(y = ~gaussian_pdf, color = I("red"), name = "Normal")
+        })
         
         output$ggvis_pareto_qf = renderPlotly({
-                       plot_ly(dists(), y = ~pareto_pts, x = ~pareto_cdf, type = 'scatter', mode = 'lines')
-                })
+                plot_ly(dists(), y = ~pareto_pts, x = ~pareto_cdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
+                        add_lines(x = ~gaussian_cdf, color = I("red"), name = "Normal")
+        })
   
 })

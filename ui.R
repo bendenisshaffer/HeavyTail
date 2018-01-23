@@ -2,10 +2,6 @@
 # This is the user-interface definition of a Shiny web application. You can
 # run the application by clicking 'Run App' above.
 #
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
 
 library(shiny)
 
@@ -14,25 +10,32 @@ shinyUI(navbarPage("HeavyTail",
                    tabPanel("Relationships",
                             simpleNetworkOutput("distRel")),
                    tabPanel("Definitions"),
+                   tabPanel("Stocks",
+                            dygraphOutput("dygraph"),
+                            plotlyOutput("retrun_density")
+                            ),
                    navbarMenu("Distributions",
                               tabPanel("Gaussian",
                                   titlePanel("Gaussian Distribution"),
-        
-                                  sidebarLayout(
-                                            sidebarPanel(
-                                                    sliderInput("gaussian_mu", label = "mu", value = 0, min = -20, max = 20, step = 0.1),
-                                                    sliderInput("gaussian_xmax", label = "xmax", value = 10, min = 5, max = 20, step = 0.5),
-                                                    sliderInput("gaussian_xmin", label = "xmin", value = -10, min = -20, max = -5, step = 0.5),
-                                                    sliderInput("gaussian_sd", label = "sd", value = 1, min = 0.01, max = 20, step = 0.01)
-                                             
-                                            ),
-                                            
-                                            mainPanel(
-                                                    plotlyOutput("ggvis_gaussian_cdf"),
-                                                    plotlyOutput("ggvis_gaussian_pdf"),
-                                                    plotlyOutput("ggvis_gaussian_qf")
-                                            )
-                                        )
+                                  fluidPage(
+                                          fluidRow(column(4,
+                                                          tags$h3("Plot Controls"),
+                                                          wellPanel(
+                                                                  sliderInput("gaussian_mu", label = "mu", value = 0, min = -20, max = 20, step = 0.1),
+                                                                  sliderInput("gaussian_xmax", label = "xmax", value = 10, min = 5, max = 20, step = 0.5),
+                                                                  sliderInput("gaussian_xmin", label = "xmin", value = -10, min = -20, max = -5, step = 0.5),
+                                                                  sliderInput("gaussian_sd", label = "sd", value = 1, min = 0.01, max = 20, step = 0.01)
+                                                                  )
+                                                          ),
+                                                   column(4,
+                                                          tags$h3("Moments")
+                                                   )
+                                          ),
+                                          fluidRow(column(12,
+                                                          plotlyOutput("ggvis_gaussian_cdf")
+                                                          )
+                                                   )
+                                          )
                                 ),
                               
                               tabPanel("Exponential",
@@ -46,10 +49,9 @@ shinyUI(navbarPage("HeavyTail",
                                                ),
                                                
                                                mainPanel(
-                                                       # plotlyOutput("plot")
-                                                       ggvisOutput("ggvis_exp_cdf"),
-                                                       ggvisOutput("ggvis_exp_pdf"),
-                                                       ggvisOutput("ggvis_exp_qf")
+                                                       plotlyOutput("ggvis_exp_cdf"),
+                                                       plotlyOutput("ggvis_exp_pdf"),
+                                                       plotlyOutput("ggvis_exp_qf")
                                                )
                                        )
                               ),
@@ -87,9 +89,9 @@ shinyUI(navbarPage("HeavyTail",
                                                ),
                                                
                                                mainPanel(
-                                                       ggvisOutput("ggvis_cauchy_cdf"),
-                                                       ggvisOutput("ggvis_cauchy_pdf"),
-                                                       ggvisOutput("ggvis_cauchy_qf")
+                                                       plotlyOutput("ggvis_cauchy_cdf"),
+                                                       plotlyOutput("ggvis_cauchy_pdf"),
+                                                       plotlyOutput("ggvis_cauchy_qf")
                                                )
                                        )
                               ),
@@ -129,9 +131,8 @@ shinyUI(navbarPage("HeavyTail",
                                                ),
                                                
                                                mainPanel(
-                                                       ggvisOutput("ggvis_pareto_cdf"),
-                                                       ggvisOutput("ggvis_pareto_pdf"),
-                                                       #ggvisOutput("ggvis_pareto_qf")
+                                                       plotlyOutput("ggvis_pareto_cdf"),
+                                                       plotlyOutput("ggvis_pareto_pdf"),
                                                        plotlyOutput("ggvis_pareto_qf")
                                                )
                                        )
