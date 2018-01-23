@@ -4,16 +4,39 @@
 #
 
 library(shiny)
+library(shinythemes)
 
 # Define UI for application that draws a histogram
-shinyUI(navbarPage("HeavyTail",
+shinyUI(navbarPage("HeavyTail", theme = shinytheme("flatly"),
+                   
+                   ### PAGE 1 ###
                    tabPanel("Relationships",
                             simpleNetworkOutput("distRel")),
+                   
+                   ### PAGE 2 ###
                    tabPanel("Definitions"),
+                   
+                   ### PAGE 3 ###
                    tabPanel("Stocks",
-                            dygraphOutput("dygraph"),
-                            plotlyOutput("retrun_density")
+                            fluidPage(
+                                    wellPanel(
+                                            textInput("stock_ticker",label = "Stock Ticker"),
+                                            selectInput("kernel", label = "Kernel", choices = c("gaussian", "epanechnikov",
+                                                                              "rectangular","triangular",
+                                                                              "biweight", "cosine", "optcosine")),
+                                            sliderInput("bw", label = "Bandwidth", min = 0.0001, max = 0.008, 0.0025, step = 0.0001),
+                                            selectInput("compare_dist", label = "Theoretical Distribution", choices = c("Gaussian",
+                                                                                                                        "Laplace",
+                                                                                                                        "Cauchy"))
+                                    ),
+                                    fluidRow(dygraphOutput("dygraph")),
+                                    fluidRow(column(5, plotOutput("retrun_density")),
+                                             column(5, plotOutput("qqplot"))
+                                             )
+                                    )
                             ),
+                   
+                   ### PAGE 4 ###
                    navbarMenu("Distributions",
                               tabPanel("Gaussian",
                                   titlePanel("Gaussian Distribution"),

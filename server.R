@@ -54,26 +54,70 @@ shinyServer(function(input, output){
         
         
         stock_df = reactive({
-                
-                apple_stock_price = getSymbols("AAPL", auto.assign = FALSE)
+                input$stock_ticker
+                apple_stock_price = getSymbols(input$stock_ticker, auto.assign = FALSE)
                 price_vec = apple_stock_price[,6]
                 df = cbind(price_vec, get_returns(price_vec))
                 df
                 
         })
         
+        gdf = reactive({
+                returns = stock_df()[-1,2]
+                
+                dist_fun = ""
+                if(input$compare_dist == "Gaussian"){
+                        dist_fun = "dnorm"
+                }else if(input$compare_dist == "Laplace"){
+                        dist_fun = "dlaplace"
+                }else if(input$compare_dist == "Cauchy"){
+                        dist_fun = "dcauchy"
+                }
+                
+                ret_density = density(returns, kernel = input$kernel, bw = input$bw)
+                mu = mean(returns)
+                sd = sd(returns )
+                pts = seq(min(returns), max(returns), length.out = length(ret_density$x))
+                norm_denity = do.call(dist_fun, list(pts, mu, sd))
+                gdf = data.frame(x = ret_density$x, y = ret_density$y, norm = norm_denity, pts)
+                gdf
+        })
+        
         output$dygraph = renderDygraph({
                 
-                dygraph(stock_df()) %>% dySeries("AAPL.Adjusted", axis = "y2") %>% 
+                dygraph(stock_df()) %>% dySeries(paste0(input$stock_ticker,".Adjusted"), axis = "y2") %>% 
                         dyRangeSelector() %>% 
                         dyHighlight(highlightCircleSize = 5, 
                                     highlightSeriesBackgroundAlpha = 0.2,
                                     hideOnMouseOut = FALSE)
         })
         
-        output$retrun_density = renderPlotly({
-                ret_density = density(stock_df()[-1,2], kernel = "gaussian")
-                plot_ly(x = ret_density, y = ret_density$y, type = 'scatter', mode = 'lines')
+        output$retrun_density = renderPlot({
+                g1 = ggplot(gdf(), aes(x = x, y = y)) + geom_area(alpha = 0.7, fill = "blue", color = "blue") + 
+                        geom_area(aes(x = pts, y = norm), alpha = 0.2, fill = "red") + 
+                        geom_vline(xintercept = mu, color = "green", alpha = 0.7, linetype = 4) + 
+                        geom_vline(xintercept = mu + sd, color = "green", alpha = 0.7, linetype = 4) + 
+                        geom_vline(xintercept = mu - sd, color = "green", alpha = 0.7, linetype = 4) + theme_linedraw()
+                g1
+                #ggplotly(g1)
+        })
+        
+        output$qqplot = renderPlot({
+                returns = stock_df()[-1,2]
+                
+                dist_fun = ""
+                if(input$compare_dist == "Gaussian"){
+                        dist_fun = "qnorm"
+                }else if(input$compare_dist == "Laplace"){
+                        dist_fun = "qlaplace"
+                }else if(input$compare_dist == "Cauchy"){
+                        dist_fun = "qcauchy"
+                }
+                
+                g2 = ggplot(returns, aes_string(sample = paste0(input$stock_ticker, ".Adjusted.Returns"))) + 
+                        stat_qq(color = "blue", distribution = dist_fun) + theme_linedraw()
+                g2
+                #ggplotly(g2)
         })
         
         
