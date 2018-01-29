@@ -1,21 +1,4 @@
 
-# 
-# # ged_cdf = fGarch::pged()
-# # ged_pdf = fGarch::dged()
-# # ged_qf = fGarch::qged()
-# 
-# # pareto_cdf = fExtremes::pgpd()
-# # pareto_pdf = fExtremes::dgpd()
-# # pareto_qf = fExtremes::qgpd()
-# 
-# 
-# dists = data.frame(laplace_cdf,
-#                    laplace_pdf,
-#                    gaussian_cdf,
-#                    gaussian_pdf,
-#                    t_cdf,
-#                    t_pdf,
-#                    pts)
 
 library(shiny)
 library(ggvis)
@@ -42,8 +25,8 @@ shinyServer(function(input, output){
         ########################################################################################
         
         output$distRel = renderSimpleNetwork({
-                src = c("Normal", "Normal", "Exponential", "t-distribution", "t-distribution")
-                dest = c("t-distribution", "Gamma", "Gamma", "Laplace", "Gamma")
+                src = c("Exponential", "Exponential", "Exponential", "Pareto")
+                dest = c("Gamma", "Pareto","GPD", "GPD")
                 distRel = data.frame(src, dest)
                 simpleNetwork(distRel)
         })
@@ -93,6 +76,8 @@ shinyServer(function(input, output){
         })
         
         output$retrun_density = renderPlot({
+                mu = mean(stock_df()[-1,2])
+                sd = sd(stock_df()[-1,2])
                 g1 = ggplot(gdf(), aes(x = x, y = y)) + geom_area(alpha = 0.7, fill = "blue", color = "blue") + 
                         geom_area(aes(x = pts, y = norm), alpha = 0.2, fill = "red") + 
                         geom_vline(xintercept = mu, color = "green", alpha = 0.7, linetype = 4) + 
@@ -178,20 +163,10 @@ shinyServer(function(input, output){
         
         ###### GAUSSIAN ######
         
-        output$ggvis_gaussian_cdf = renderPlotly({
+        output$ggvis_gaussian_cdf_pdf = renderPlotly({
                 p1 = plot_ly(dists(), x = ~gaussian_pts, y = ~gaussian_cdf, type = 'scatter', mode = 'lines', name = "CDF")
                 p2 = plot_ly(dists(), x = ~gaussian_pts, y = ~gaussian_pdf, type = 'scatter', mode = 'lines', name = "PDF")
                 subplot(p1, p2, nrows = 1)
-        })
-        
-        
-        output$ggvis_gaussian_pdf = renderPlotly({
-                plot_ly(dists(), x = ~gaussian_pts, y = ~gaussian_pdf, type = 'scatter', mode = 'lines', name = "Gaussian")
-        })
-        
-        
-        output$ggvis_gaussian_qf = renderPlotly({
-                plot_ly(dists(), y = ~gaussian_pts, x = ~gaussian_cdf, type = 'scatter', mode = 'lines', name = "Gaussian")
         })
         
         ###### LAPLACE ######
@@ -229,20 +204,12 @@ shinyServer(function(input, output){
         
         ###### Exponential ######
         
-        output$ggvis_exp_cdf = renderPlotly({
-                plot_ly(dists(), x = ~exp_pts, y = ~exp_cdf, type = 'scatter', mode = 'lines', name = "Exponential")  %>%
-                        add_lines(y = ~gaussian_cdf, color = I("red"), name = "Normal")
+        output$ggvis_exp_cdf_pdf = renderPlotly({
+                p1 = plot_ly(dists(), x = ~exp_pts, y = ~exp_cdf, type = 'scatter', mode = 'lines', name = "CDF")
+                p2 = plot_ly(dists(), x = ~exp_pts, y = ~exp_pdf, type = 'scatter', mode = 'lines', name = "PDF")
+                subplot(p1, p2, nrows = 1)
         })
         
-        output$ggvis_exp_pdf = renderPlotly({
-                plot_ly(dists(), x = ~exp_pts, y = ~exp_pdf, type = 'scatter', mode = 'lines', name = "Exponential")  %>%
-                        add_lines(y = ~gaussian_pdf, color = I("red"), name = "Normal")
-        })
-        
-        output$ggvis_exp_qf = renderPlotly({
-                plot_ly(dists(), y = ~exp_pts, x = ~exp_cdf, type = 'scatter', mode = 'lines', name = "Exponential")  %>%
-                        add_lines(x = ~gaussian_cdf, color = I("red"), name = "Normal")
-        })
         
         ###### CAUCHY ######
         
@@ -264,19 +231,12 @@ shinyServer(function(input, output){
         
         ###### PARETO ######
         
-        output$ggvis_pareto_cdf = renderPlotly({
-                plot_ly(dists(), x = ~pareto_pts, y = ~pareto_cdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
-                        add_lines(y = ~gaussian_cdf, color = I("red"), name = "Normal")
-        })
-        
-        output$ggvis_pareto_pdf = renderPlotly({
-                plot_ly(dists(), x = ~pareto_pts, y = ~pareto_pdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
-                        add_lines(y = ~gaussian_pdf, color = I("red"), name = "Normal")
-        })
-        
-        output$ggvis_pareto_qf = renderPlotly({
-                plot_ly(dists(), y = ~pareto_pts, x = ~pareto_cdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
-                        add_lines(x = ~gaussian_cdf, color = I("red"), name = "Normal")
+        output$ggvis_pareto_cdf_pdf = renderPlotly({
+                p1 = plot_ly(dists(), x = ~pareto_pts, y = ~pareto_cdf, type = 'scatter', mode = 'lines', name = "Pareto")  %>%
+                        add_lines(y = ~exp_cdf, color = I("red"), name = "Exponential")
+                p2 = plot_ly(dists(), x = ~pareto_pts, y = ~pareto_pdf, type = 'scatter', mode = 'lines')  %>%
+                        add_lines(y = ~exp_pdf, color = I("red"))
+                subplot(p1, p2, nrows = 1)
         })
   
 })

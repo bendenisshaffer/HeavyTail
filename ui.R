@@ -11,10 +11,69 @@ shinyUI(navbarPage("HeavyTail", theme = shinytheme("flatly"),
                    
                    ### PAGE 1 ###
                    tabPanel("Relationships",
-                            simpleNetworkOutput("distRel")),
+                            simpleNetworkOutput("distRel")
+                            
+                            ),
                    
                    ### PAGE 2 ###
-                   tabPanel("Definitions"),
+                   tabPanel("Definitions",
+                            tags$h1("Definitions"),
+                            
+                            tags$h2("Statistics"),
+                            
+                            tags$h3("Likelihood Function"),
+                            
+                            tags$h3("Log-Likelihood"),
+                            
+                            tags$h3("Maximum Likelihood Estimate"),
+                            
+                            tags$h2("Finance"),
+                            
+                            tags$h3("Net Returns"),
+                            
+                            tags$h3("Gross Returns"),
+                            
+                            tags$h3("Log Returns"),
+                            
+                            tags$h3("Risk Management"),
+                            
+                            tags$h3("MultiPeriod Returns"),
+                            
+                            tags$h3("Adjusted Returns"),
+                            
+                            tags$h3("Zero-Cupon Bond"),
+                            
+                            tags$h3("Cupon Bond"),
+                            
+                            tags$h3("Yield to Maturity"),
+                            
+                            tags$h3("Spot Rate"),
+                            
+                            tags$h3("Risk Premium"),
+                            
+                            tags$h2("Risk Management"),
+                            
+                            tags$h3("Value at Risk"),
+                            
+                            withMathJax(),
+                            helpText("VaR - a function of two parameteres ( \\(\\alpha\\) ) a small probability and ( \\(T\\) ) a time horizon.
+                                   VaR is the \\(\\alpha\\)th quantile of the loss distribution \\(L\\) over time \\(T\\)."),
+                            withMathJax(),
+                            helpText('$$ P\\bigg(L_{T} < \\text{VaR}_{T}(\\alpha)\\bigg) = \\alpha $$'),
+                            helpText('$$ \\text{VaR}_{T}(\\alpha) = inf[x: P(L_{T} > x) < \\alpha ] $$'),
+                            
+                            tags$h3("Shortfall Distribution"),
+                            
+                            helpText("S - is the conditional distribution of loss \\(L\\), conditioning on the event that \\(L\\) > VaR,
+                                     over the time horizon \\(T\\)."),
+                            helpText('$$ S_T(x,\\alpha) = P\\bigg(L_T \\leq x | L_T > \\text{VaR}_T(\\alpha)\\bigg) $$'),
+                            
+                            tags$h3("Expected Shortfall"),
+                            
+                            tags$p("ES - ")
+                            
+                            
+                            ),
                    
                    ### PAGE 3 ###
                    tabPanel("Stocks",
@@ -29,7 +88,7 @@ shinyUI(navbarPage("HeavyTail", theme = shinytheme("flatly"),
                                                                                                                         "Laplace",
                                                                                                                         "Cauchy"))
                                     ),
-                                    fluidRow(dygraphOutput("dygraph")),
+                                    fluidRow(column(10, dygraphOutput("dygraph"), offset = 1)),
                                     fluidRow(column(5, plotOutput("retrun_density")),
                                              column(5, plotOutput("qqplot"))
                                              )
@@ -55,7 +114,7 @@ shinyUI(navbarPage("HeavyTail", theme = shinytheme("flatly"),
                                                    )
                                           ),
                                           fluidRow(column(12,
-                                                          plotlyOutput("ggvis_gaussian_cdf")
+                                                          plotlyOutput("ggvis_gaussian_cdf_pdf")
                                                           )
                                                    )
                                           )
@@ -72,9 +131,7 @@ shinyUI(navbarPage("HeavyTail", theme = shinytheme("flatly"),
                                                ),
                                                
                                                mainPanel(
-                                                       plotlyOutput("ggvis_exp_cdf"),
-                                                       plotlyOutput("ggvis_exp_pdf"),
-                                                       plotlyOutput("ggvis_exp_qf")
+                                                       plotlyOutput("ggvis_exp_cdf_pdf")
                                                )
                                        )
                               ),
@@ -154,9 +211,7 @@ shinyUI(navbarPage("HeavyTail", theme = shinytheme("flatly"),
                                                ),
                                                
                                                mainPanel(
-                                                       plotlyOutput("ggvis_pareto_cdf"),
-                                                       plotlyOutput("ggvis_pareto_pdf"),
-                                                       plotlyOutput("ggvis_pareto_qf")
+                                                       plotlyOutput("ggvis_pareto_cdf_pdf")
                                                )
                                        )
                               )
